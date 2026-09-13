@@ -1,0 +1,22 @@
+# Build and local runtime outputs
+build/
+__pycache__/
+*.py[cod]
+*.log
+*.pid
+*.sock
+*.bak
+*.tar.gz
+.env
+.env.*
+
+# Local agent/editor state is never part of a release
+.agents/
+.codex/
+.claude/
+.pilot/
+AGENTS.md
+CLAUDE.md
+.vscode/
+.idea/
+.DS_Store

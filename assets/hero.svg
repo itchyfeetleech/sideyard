@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="820" viewBox="0 0 1440 820" role="img" aria-labelledby="title desc">
+<title id="title">Sideyard. A desktop for your agent. Yours stays yours.</title>
+<desc id="desc">A cream and forest-green identity with two neighboring windows: a personal desktop and a separate agent desktop. Native Omarchy workspaces, connected over MCP.</desc>
+<rect width="1440" height="820" rx="16" fill="#f4f0e7"/>
+<g transform="translate(68 62)">
+  <rect x="6" y="18" width="28" height="38" rx="2" fill="none" stroke="#202925" stroke-width="3"/>
+  <rect x="42" y="8" width="16" height="48" rx="2" fill="#577a60"/>
+</g>
+<text x="156" y="106" fill="#202925" font-family="sans-serif" font-weight="700" font-size="42" letter-spacing="-1.4">Sideyard</text>
+<text x="1372" y="100" fill="#577a60" font-family="monospace" font-size="16" text-anchor="end" letter-spacing="2">OMARCHY / MCP</text>
+<text x="72" y="224" fill="#202925" font-family="sans-serif" font-weight="600" font-size="64" letter-spacing="-2">A desktop for your agent.</text>
+<text x="72" y="300" fill="#577a60" font-family="sans-serif" font-weight="600" font-size="64" letter-spacing="-2">Yours stays yours.</text>
+<g transform="translate(72 374)">
+  <rect width="588" height="314" rx="10" fill="#202925"/>
+  <path d="M0 48H588" stroke="#4c5750"/>
+  <circle cx="25" cy="24" r="4" fill="#9bada0"/>
+  <text x="46" y="30" fill="#f4f0e7" font-family="monospace" font-size="14">YOUR DESKTOP</text>
+  <g stroke="#64766a" stroke-width="7" stroke-linecap="round">
+    <path d="M34 88H200 M34 113H295 M34 138H248 M34 163H314"/>
+  </g>
+  <rect x="352" y="76" width="202" height="204" rx="5" fill="#38493e"/>
+  <path d="M386 238L427 168L458 206L509 119" fill="none" stroke="#b0c7a0" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+  <text x="34" y="263" fill="#c4cfc5" font-family="monospace" font-size="15">Keep working.</text>
+</g>
+<g transform="translate(708 374)">
+  <rect width="660" height="314" rx="10" fill="#e2e8da" stroke="#577a60" stroke-width="2"/>
+  <path d="M0 48H660" stroke="#a1b49c"/>
+  <rect x="16" y="12" width="24" height="24" rx="3" fill="#577a60"/>
+  <text x="28" y="29" fill="#fff" font-family="monospace" font-size="15" text-anchor="middle">6</text>
+  <text x="54" y="30" fill="#304c35" font-family="monospace" font-size="14">AGENT · research</text>
+  <text x="638" y="30" fill="#304c35" font-family="monospace" font-size="13" text-anchor="end">Watch / Take control</text>
+  <rect x="26" y="74" width="606" height="204" rx="4" fill="#f6f8f1"/>
+  <g stroke="#a9bca0" stroke-width="7" stroke-linecap="round">
+    <path d="M52 107H236 M52 133H369 M52 159H310"/>
+  </g>
+  <rect x="52" y="208" width="120" height="35" rx="3" fill="#577a60"/>
+  <path d="M545 198L545 238L555 226L568 242L575 236L562 220L580 217Z" fill="#b86d4d"/>
+</g>
+<text x="72" y="758" fill="#59675c" font-family="monospace" font-size="16" letter-spacing=".5">LOCAL DESKTOPS. NATIVE WORKSPACES. YOUR CHOICE OF AGENT.</text>
+<g transform="translate(1200 730)">
+  <rect width="168" height="42" rx="5" fill="none" stroke="#a7b59f"/>
+  <text x="84" y="27" fill="#304c35" font-family="monospace" font-size="17" text-anchor="middle">Super + 6</text>
+</g>
+</svg>

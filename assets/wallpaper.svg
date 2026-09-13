@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2560" height="1440" viewBox="0 0 2560 1440">
+  <rect width="2560" height="1440" fill="#202925"/>
+  <g fill="none" stroke="#9bb18e" stroke-width="2" opacity=".14">
+    <rect x="1190" y="300" width="460" height="770" rx="8"/>
+    <rect x="1730" y="180" width="300" height="890" rx="8"/>
+    <path d="M1000 1070H2210"/>
+  </g>
+  <rect x="1730" y="180" width="300" height="890" rx="8" fill="#78916c" opacity=".045"/>
+  <g transform="translate(104 1144) scale(1.25)">
+    <rect x="6" y="18" width="28" height="38" rx="2" fill="none" stroke="#f4f0e7" stroke-width="3"/>
+    <rect x="42" y="8" width="16" height="48" rx="2" fill="#a9bf98"/>
+  </g>
+  <text x="204" y="1208" fill="#f4f0e7" font-family="sans-serif" font-size="56" font-weight="600" letter-spacing="-2">Sideyard</text>
+  <text x="110" y="1260" fill="#a9b6a7" font-family="sans-serif" font-size="24">A desktop for your agent.</text>
+  <text x="2450" y="1260" fill="#9aab94" font-family="monospace" font-size="17" letter-spacing="2" text-anchor="end">AGENT DESKTOP</text>
+</svg>

@@ -1,0 +1,13 @@
+Sideyard uses installed Omarchy, Hyprland, Sway, Bubblewrap, WayVNC, TigerVNC,
+Quickshell, grim, Wayland and libxkbcommon. Those projects retain their own
+licenses and are not bundled into this repository.
+
+src/aw_input/virtual-keyboard-unstable-v1.xml retains its upstream copyright
+and permissive license in the file. The pointer protocol is supplied by the
+installed wlr-protocols package. Generated protocol bindings and binaries are
+build outputs and are not distributed in this source repository.
+
+The input helper's Unicode keymap approach was informed by wtype:
+https://github.com/atx/wtype (MIT). The helper is implemented in this repository.
+
+Sideyard is an independent project and is not an official Omarchy product.

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "hoppcx.agent-workspaces",
+  "name": "Sideyard",
+  "version": "1.2.0",
+  "author": "itchyfeetleech",
+  "description": "A desktop for your agent. Yours stays yours.",
+  "kinds": [
+    "bar-widget",
+    "panel"
+  ],
+  "entryPoints": {
+    "barWidget": "Widget.qml",
+    "panel": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Sideyard",
+    "description": "Start, watch and take control of agent desktops",
+    "category": "System",
+    "allowMultiple": false,
+    "defaultSection": "left",
+    "defaults": {},
+    "schema": []
+  },
+  "keepLoaded": true
+}
