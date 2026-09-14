@@ -10,4 +10,9 @@ build outputs and are not distributed in this source repository.
 The input helper's Unicode keymap approach was informed by wtype:
 https://github.com/atx/wtype (MIT). The helper is implemented in this repository.
 
+The printable-keycode Unicode typing fix is adapted from Olaf K-Freund's
+MIT-licensed ai-mirror fork, commit 2dd9a1807968f69a818c94030da32d53a41ad2b8:
+https://github.com/olafkfreund/ai-mirror
+The fork also informed input-failure cleanup and MCP error handling improvements.
+
 Sideyard is an independent project and is not an official Omarchy product.

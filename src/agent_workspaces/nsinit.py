@@ -29,7 +29,7 @@ HELPER_BIN = (Path(__file__).resolve().parent.parent.parent
               / "build" / "aw_input" / "aw-input")
 
 _ACTION_RES = (
-    re.compile(r"M -?\d+ -?\d+"),
+    re.compile(r"M \d+ \d+"),
     re.compile(r"B \d+ [01]"),
     re.compile(r"S -?\d+ -?\d+"),
     re.compile(r"K \d+ [01]"),
@@ -421,6 +421,7 @@ class Session:
 
     def start_helper(self, base: dict[str, str]) -> str | None:
         """Start the owned helper; None means it answered READY."""
+        self.stop_helper()  # Close streams from a previously exited helper.
         if not HELPER_BIN.is_file():
             return f"helper binary missing: {HELPER_BIN}"
         env = dict(base)
@@ -434,17 +435,34 @@ class Session:
                 text=True, bufsize=1, close_fds=True)
         except OSError as exc:
             return f"helper spawn failed: {exc}"
+        self.helper = proc
         ready, _, _ = select.select([proc.stdout], [], [], 15)
         if not ready:
-            proc.kill()
+            self.stop_helper()
             return "helper not ready: timeout"
         line = proc.stdout.readline().strip()
         if line != "READY":
-            proc.kill()
+            self.stop_helper()
             return f"helper not ready: {line[:80]!r}"
-        self.helper = proc
         self.say(f"input helper ready pid={proc.pid}")
         return None
+
+    def stop_helper(self) -> None:
+        """EOF releases held input; discard the stream before accepting another batch."""
+        proc = self.helper
+        if proc is None:
+            return
+        try:
+            proc.stdin.close()
+        except (OSError, ValueError):
+            pass
+        try:
+            proc.wait(timeout=1)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait(timeout=5)
+        proc.stdout.close()
+        self.helper = None
 
     def helper_cmd(self, line: str, timeout: float = 15.0) -> str:
         proc = self.helper
@@ -494,8 +512,12 @@ class Session:
             try:
                 ack = self.helper_cmd(action)
             except RuntimeError as exc:
+                # A timed-out command can still reply later. Sending C and reusing
+                # this stream could mistake that late reply for cancellation.
+                self.stop_helper()
                 return {"ok": False, "error": f"unavailable: {exc}"}
             if ack != "OK":
+                self.op_cancel()
                 return {"ok": False,
                         "error": f"unavailable: helper {ack[:80]!r}"}
         return {"ok": True, "acked": len(actions), "generation": cur}
@@ -506,8 +528,10 @@ class Session:
         try:
             ack = self.helper_cmd("C")
         except RuntimeError as exc:
+            self.stop_helper()
             return {"ok": False, "error": f"unavailable: {exc}"}
         if ack != "OK":
+            self.stop_helper()
             return {"ok": False, "error": f"unavailable: cancel -> {ack[:80]!r}"}
         return {"ok": True}
 

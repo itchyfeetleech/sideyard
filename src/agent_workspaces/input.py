@@ -19,6 +19,13 @@ def number(action, key):
     return value
 
 
+def point(action, kx='x', ky='y'):
+    x, y = number(action, kx), number(action, ky)
+    if x < 0 or y < 0:
+        raise ValueError('Coordinates cannot be negative')
+    return x, y
+
+
 def encode(actions) -> list[str]:
     if not isinstance(actions, list) or not 1 <= len(actions) <= 16:
         raise ValueError('Provide 1–16 actions per input call')
@@ -28,9 +35,7 @@ def encode(actions) -> list[str]:
             raise ValueError('Each action must be an object')
         kind = action.get('type')
         if kind in ('move', 'click', 'drag'):
-            x, y = number(action, 'x'), number(action, 'y')
-            if x < 0 or y < 0:
-                raise ValueError('Coordinates cannot be negative')
+            x, y = point(action)
             lines.append(f'M {x} {y}')
             if kind in ('click', 'drag'):
                 button = {'left': 272, 'right': 273, 'middle': 274}.get(action.get('button', 'left'))
@@ -41,7 +46,7 @@ def encode(actions) -> list[str]:
                     raise ValueError('click count must be 1 or 2')
                 lines.append(f'B {button} 1')
                 if kind == 'drag':
-                    lines.append(f'M {number(action, "to_x")} {number(action, "to_y")}')
+                    lines.append('M %d %d' % point(action, 'to_x', 'to_y'))
                 lines.append(f'B {button} 0')
                 if kind == 'click' and count == 2:
                     lines.extend([f'B {button} 1', f'B {button} 0'])

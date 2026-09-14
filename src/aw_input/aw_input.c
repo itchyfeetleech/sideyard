@@ -14,7 +14,7 @@
  *   Q                    quit cleanly
  * Replies: READY (once, after devices exist), OK, or ERR <message>.
  *
- * Unicode typing generates a throwaway XKB keymap mapping fresh keycodes to
+ * Unicode typing generates a throwaway XKB keymap mapping printable-key codes to
  * the requested codepoints, following the approach of wtype (MIT licensed,
  * https://github.com/atx/wtype), then restores the default map.
  */
@@ -70,21 +70,22 @@ static uint32_t now_ms(void) {
 }
 
 static void send_keymap(struct xkb_keymap *map) {
-	const char *str = xkb_keymap_get_as_string(map, XKB_KEYMAP_USE_ORIGINAL_FORMAT);
-	if (!str) {
-		str = default_map_str;
-	}
+	char *allocated = xkb_keymap_get_as_string(map, XKB_KEYMAP_USE_ORIGINAL_FORMAT);
+	const char *str = allocated ? allocated : default_map_str;
 	size_t len = strlen(str) + 1;
 	int fd = memfd_create("aw-keymap", MFD_CLOEXEC);
 	if (fd < 0) {
+		free(allocated);
 		return;
 	}
 	if (write(fd, str, len) != (ssize_t)len) {
 		close(fd);
+		free(allocated);
 		return;
 	}
 	zwp_virtual_keyboard_v1_keymap(kbd, XKB_KEYMAP_FORMAT_TEXT_V1, fd, (uint32_t)len);
 	close(fd);
+	free(allocated);
 }
 
 static void registry_global(void *data, struct wl_registry *reg, uint32_t name,
@@ -146,7 +147,19 @@ static size_t utf8_decode(const char *s, size_t n, uint32_t *cp) {
 	return want;
 }
 
-/* Build a keymap giving each codepoint its own keycode, like wtype. */
+/* Evdev codes whose usual meaning is a plain printable key (digits, letters,
+ * punctuation). Compositors match keybinds against the user's own layout, so
+ * typing on codes that mean F9, Print, volume or brightness there would be
+ * swallowed and could fire those binds. Prefer ordinary printable positions. */
+static const uint32_t TYPE_CODES[] = {
+	2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,          /* 1..0 - =   */
+	16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,  /* q..p [ ]   */
+	30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41,  /* a..l ; ' ` */
+	43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53,      /* \ z..m , . / */
+};
+#define N_TYPE_CODES (sizeof(TYPE_CODES) / sizeof(TYPE_CODES[0]))
+
+/* Build a keymap putting each distinct codepoint on one TYPE_CODES entry (wtype approach). */
 static struct xkb_keymap *build_type_map(const uint32_t *cps, size_t n) {
 	size_t cap = 4096 + n * 96;
 	char *buf = malloc(cap);
@@ -161,7 +174,7 @@ static struct xkb_keymap *build_type_map(const uint32_t *cps, size_t n) {
 			"    maximum = 255;\n");
 	for (size_t i = 0; i < n; i++) {
 		off += (size_t)snprintf(buf + off, cap - off,
-				"    <K%02zu> = %zu;\n", i, KEY_BASE + i);
+				"    <K%02zu> = %u;\n", i, TYPE_CODES[i] + KEY_BASE);
 	}
 	off += (size_t)snprintf(buf + off, cap - off,
 			"  };\n"
@@ -315,24 +328,46 @@ static void handle_line(char *line) {
 			printf("ERR text too long\n");
 			return;
 		}
-		struct xkb_keymap *map = build_type_map(cps, n);
-		if (!map) {
-			printf("ERR keymap failed\n");
-			return;
+		/* Type in rounds of at most N_TYPE_CODES distinct codepoints. */
+		for (size_t start = 0; start < n;) {
+			uint32_t distinct[N_TYPE_CODES];
+			size_t slot[MAX_TYPE_CHARS];
+			size_t nd = 0, end = start;
+			for (; end < n; end++) {
+				size_t k = 0;
+				while (k < nd && distinct[k] != cps[end]) {
+					k++;
+				}
+				if (k == nd) {
+					if (nd == N_TYPE_CODES) {
+						break;
+					}
+					distinct[nd++] = cps[end];
+				}
+				slot[end] = k;
+			}
+			struct xkb_keymap *map = build_type_map(distinct, nd);
+			if (!map) {
+				send_keymap(default_map);
+				wl_display_roundtrip(display);
+				printf("ERR keymap failed\n");
+				return;
+			}
+			send_keymap(map);
+			zwp_virtual_keyboard_v1_modifiers(kbd, 0, 0, 0, 0);
+			wl_display_roundtrip(display);
+			for (size_t i = start; i < end; i++) {
+				uint32_t t = now_ms();
+				zwp_virtual_keyboard_v1_key(kbd, t, TYPE_CODES[slot[i]], 1);
+				zwp_virtual_keyboard_v1_key(kbd, t, TYPE_CODES[slot[i]], 0);
+			}
+			wl_display_flush(display);
+			/* Keys must be dispatched under the type map before restoring
+			 * the default map; quitting ahead of the server drops them. */
+			wl_display_roundtrip(display);
+			xkb_keymap_unref(map);
+			start = end;
 		}
-		send_keymap(map);
-		zwp_virtual_keyboard_v1_modifiers(kbd, 0, 0, 0, 0);
-		wl_display_roundtrip(display);
-		for (size_t i = 0; i < n; i++) {
-			uint32_t t = now_ms();
-			zwp_virtual_keyboard_v1_key(kbd, t, (uint32_t)i, 1);
-			zwp_virtual_keyboard_v1_key(kbd, t, (uint32_t)i, 0);
-		}
-		wl_display_flush(display);
-		/* Keys must be dispatched under the type map before restoring
-		 * the default map; quitting ahead of the server drops them. */
-		wl_display_roundtrip(display);
-		xkb_keymap_unref(map);
 		send_keymap(default_map);
 		send_modifiers();
 		wl_display_flush(display);
@@ -398,8 +433,8 @@ int main(void) {
 		fprintf(stderr, "aw-input: cannot create keyboard state\n");
 		return 1;
 	}
-	default_map_str = strdup(xkb_keymap_get_as_string(default_map,
-			XKB_KEYMAP_USE_ORIGINAL_FORMAT));
+	default_map_str = xkb_keymap_get_as_string(default_map,
+			XKB_KEYMAP_USE_ORIGINAL_FORMAT);
 	send_keymap(default_map);
 	wl_display_roundtrip(display);
 	if (wl_display_get_error(display)) {

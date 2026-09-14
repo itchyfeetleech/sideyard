@@ -75,7 +75,8 @@ the desktop need Wayland support.
 [MIT license](LICENSE)
 
 To work on the code, run `make check`. The small regression suite covers input
-ownership, process identity, frame mapping and deletion boundaries. Run
+ownership and failure cleanup, Unicode keymaps, MCP error recovery, process
+identity, frame mapping and deletion boundaries. Run
 `python3 tests/smoke.py` on Omarchy for the real desktop check (up to two free slots); it opens a
 viewer and removes its temporary desktops afterward. `make uninstall` removes
 the CLI and widget and keeps workspace data.

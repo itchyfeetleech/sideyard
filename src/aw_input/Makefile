@@ -34,7 +34,13 @@ $(BUILD)/wlr-virtual-pointer-unstable-v1-protocol.c: $(WLR_PROTO) | $(BUILD)
 $(BIN): aw_input.c $(GEN_H) $(GEN_C)
 	$(CC) $(CFLAGS) $(PKG_CFLAGS) -I$(BUILD) -o $@ aw_input.c $(GEN_C) $(PKG_LIBS)
 
+$(BUILD)/test-input-helper: ../../tests/test_input_helper.c aw_input.c $(GEN_H) $(GEN_C)
+	$(CC) $(CFLAGS) $(PKG_CFLAGS) -I$(BUILD) -o $@ ../../tests/test_input_helper.c $(GEN_C) $(PKG_LIBS)
+
+check: $(BUILD)/test-input-helper
+	$(BUILD)/test-input-helper
+
 clean:
 	rm -rf $(BUILD)
 
-.PHONY: all clean
+.PHONY: all check clean

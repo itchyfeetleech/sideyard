@@ -14,6 +14,9 @@ import time
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
 from agent_workspaces import api, paths, session
 
+# Cross several printable-keymap rounds and repeat characters to exercise reuse.
+UNICODE = 'Ω ' + ''.join(chr(0x4E00 + i) for i in range(100)) + ' Ω repeated repeated'
+
 
 def wait_for(check, seconds=10):
     deadline = time.monotonic() + seconds
@@ -33,20 +36,22 @@ def main():
     try:
         for sid in ids:
             ready.append(api.run('start', {'id': sid, 'width': 1280, 'height': 720, 'headless': True}))
-            api.run('launch', {'id': sid, 'argv': ['foot', '--app-id', sid]})
+            # A plain shell avoids user startup scripts discarding type-ahead.
+            api.run('launch', {'id': sid, 'argv': ['foot', '--app-id', sid, 'sh']})
             wait_for(lambda: any(w['class'] == sid for w in api.run('windows', {'id': sid})['windows']))
         if len(ready) == 2:
             assert ready[0]['host_runtime_dir'] != ready[1]['host_runtime_dir']
             assert ready[0]['inner_signature'] != ready[1]['inner_signature']
         for sid in ids:
             shot = api.run('screenshot', {'id': sid})
-            command = "printf '%s' '" + sid + " Ω' > proof.txt"
+            expected = sid + ' ' + UNICODE
+            command = "printf '%s' '" + expected + "' > proof.txt"
             api.run('input', {'id': sid, 'generation': shot['generation'], 'actions': [
                 {'type': 'type', 'text': 'discard me'}, {'type': 'key', 'keys': ['CTRL', 'U']},
                 {'type': 'type', 'text': command + '\n'}]})
             proof = paths.work_dir(sid) / 'proof.txt'
             wait_for(lambda: proof.exists())
-            assert proof.read_text() == sid + ' Ω'
+            assert proof.read_text() == expected
         sid = ids[0]
         previous = api.run('screenshot', {'id': sid})['generation']
         human = api.run('control', {'id': sid, 'mode': 'human'})

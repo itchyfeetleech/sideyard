@@ -23,6 +23,10 @@ FRAMES = {}  # Per connection; old frames cannot accumulate indefinitely.
 FRAME_NUMBER = 0
 
 
+class MethodNotFound(Exception):
+    pass
+
+
 def tool(name, description, properties=None, required=None, readonly=False):
     return {'name': name, 'description': description,
             'annotations': {'readOnlyHint': readonly},
@@ -174,12 +178,15 @@ def dispatch(method, params):
                     time.sleep(wait_ms / 1000)
                     try:
                         content.extend(observe({'id': args['id']}))
-                    except (AwError, OSError, ValueError, RuntimeError, subprocess.SubprocessError) as exc:
+                    except Exception as exc:
                         content.append(text({'observation_error': str(exc), 'note': 'Input completed; do not repeat it.'}))
             return {'content': content, 'isError': False}
-        except (AwError, OSError, ValueError, RuntimeError, subprocess.SubprocessError) as exc:
-            return {'content': [text({'code': getattr(exc, 'code', 'invalid_request'), 'message': str(exc)})], 'isError': True}
-    raise KeyError(method)
+        except Exception as exc:
+            # A tool failure must not tear down the connection or look like an
+            # unknown JSON-RPC method. Preserve existing codes for expected errors.
+            code = 'invalid_request' if isinstance(exc, (AwError, OSError, ValueError, RuntimeError, subprocess.SubprocessError)) else type(exc).__name__
+            return {'content': [text({'code': getattr(exc, 'code', code), 'message': str(exc)})], 'isError': True}
+    raise MethodNotFound(method)
 
 
 def main():
@@ -199,8 +206,10 @@ def main():
             response = {'error': {'code': -32700, 'message': 'Parse error'}}
         except (TypeError, ValueError):
             response = {'error': {'code': -32600, 'message': 'Invalid request'}}
-        except KeyError:
+        except MethodNotFound:
             response = {'error': {'code': -32601, 'message': 'Method not found'}}
+        except Exception as exc:
+            response = {'error': {'code': -32603, 'message': f'Internal error: {type(exc).__name__}'}}
         response.update(jsonrpc='2.0', id=request.get('id') if isinstance(request, dict) else None)
         print(json.dumps(response, ensure_ascii=False), flush=True)
     return 0
